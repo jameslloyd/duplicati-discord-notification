@@ -14,7 +14,7 @@ app = Flask(__name__)
 @app.route("/report", methods=['POST'])
 def report():
     if request.args.get('webhook'):
-        webhook = request.args.get('webhook')
+        webhookurl = request.args.get('webhook')
         message = request.form.get('message')
         if request.args.get('name'):
             name = request.args.get('name')
@@ -25,7 +25,7 @@ def report():
                     i = item.split(': ')
                     output[i[0]]=i[1]
             webhook = DiscordWebhook(url=webhookurl)
-            title = f'Duplicati {output["MainOperation"]} {output["ParsedResult"]}'
+            title = f'Duplicati job {name} {output["MainOperation"]} {output["ParsedResult"]}'
             description=f'{output["MainOperation"]} started at {output["BeginTime"]}\n{output["MainOperation"]} took {output["Duration"]}\nNumber of files {output["ExaminedFiles"]}\nNumber of modified files {output["ModifiedFiles"]}\nSize of backup {output["SizeOfExaminedFiles"]}'
             footer = f'{output["ParsedResult"]}'
             color = colour[output["ParsedResult"]]

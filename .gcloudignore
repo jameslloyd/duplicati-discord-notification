@@ -1,0 +1,9 @@
+.gcloudignore
+.git
+.gitignore
+__pycache__/
+# Ignored by the build system
+/setup.cfg
+.venv
+.env
+.envrc
