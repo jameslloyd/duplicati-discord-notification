@@ -1,2 +1,3 @@
 flask
 discord-webhook
+requests
