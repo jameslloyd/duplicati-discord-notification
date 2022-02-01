@@ -20,6 +20,10 @@ def sizeof_fmt(num, suffix="B"):
         num /= 1024.0
     return f"{num:.1f}Yi{suffix}"
 
+@app.route("/")
+def home():
+    return 'OK'
+
 @app.route("/report", methods=['POST'])
 def report():
     if request.args.get('webhook'):
