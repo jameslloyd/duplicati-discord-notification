@@ -1,0 +1,1 @@
+# duplicati-discord-notification
