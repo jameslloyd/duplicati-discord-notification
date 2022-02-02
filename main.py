@@ -54,4 +54,4 @@ def report():
     return '{}'
 
 if __name__ == "__main__":
-    app.run(host="192.168.6.3")
+    app.run(host="0.0.0.0")
