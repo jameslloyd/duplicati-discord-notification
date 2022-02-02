@@ -32,20 +32,18 @@
   <body>
 <div class='container'>
     <header class="d-flex align-items-center pb-3 mb-5 border-bottom">
-        <a href="/" class="d-flex align-items-center text-dark text-decoration-none">
-          <span class="fs-4">Duplicati Notifications</span>
-        </a>
+        <a href="/" class="d-flex align-items-center text-dark text-decoration-none"><span class="fs-4">Duplicati Notifications</span></a>
       </header>
     <div class='row'>   
         <main>
-            <form>
+            <form class='needs-validation'>
                 <div class="input-group mb-3">
                     <span style='width:150px;' class="input-group-text" id="basic-addon1">Name: </span>
-                    <input type="text" class="form-control" placeholder="Some Back Up Name" aria-label="name" name='name'>
+                    <input type="text" class="form-control" placeholder="Some Back Up Name" aria-label="name" name='name' required>
                 </div>
                 <div class="input-group mb-3">
                     <span style='width:150px;' class="input-group-text" id="basic-addon1">Webhook: </span> 
-                    <input type="text" class="form-control" placeholder="Some Discord Webhook" aria-label="webhook" name='webhook'>
+                    <input type="text" class="form-control" placeholder="Some Discord Webhook" aria-label="webhook" name='webhook' required>
                 </div>
                 <div class="input-group mb-3">        
                     <button type="submit" class="btn btn-primary">Create send-http-url URL</button>
@@ -58,6 +56,16 @@
                 {%endif-%}
             </form>
         </main>
+    </div>
+    <div class="container">
+        <div class="row">
+          <div class="col">
+            Edit your backup jobs options.  At the bottom add from advanced options send-http-url
+          </div>
+          <div class="col">
+            <img src="{{ url_for('static',filename='Duplicati-Backup-Options.png')}}" class="img-thumbnail">
+          </div>
+        
     </div>
 </div>
 
