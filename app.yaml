@@ -1,1 +1,4 @@
 runtime: python39
+
+- url: /static
+  static_dir: static

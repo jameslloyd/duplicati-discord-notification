@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, render_template
 import requests
 from discord_webhook import DiscordWebhook, DiscordEmbed
 
@@ -22,7 +22,7 @@ def sizeof_fmt(num, suffix="B"):
 
 @app.route("/")
 def home():
-    return 'OK'
+    return render_template('index.html')
 
 @app.route("/report", methods=['POST'])
 def report():
