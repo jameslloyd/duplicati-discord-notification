@@ -57,10 +57,7 @@ def report():
             color = colour[output["ParsedResult"]]
             embed = DiscordEmbed(title=title,color=color)
             started = output["BeginTime"].split('(')
-            embed.set_author(
-                name="Duplicati Discord Notification",
-                url="https://duplicati-notifications.lloyd.ws/",
-            )
+            embed.set_author(name="Duplicati Discord Notification",url="https://duplicati-notifications.lloyd.ws/", )
             embed.add_embed_field(name='Started', value=started[0]) # 2/7/2022 7:25:05 AM (1644218705)  %-m/%-d/%Y %H:%-M:%S ()
             embed.add_embed_field(name='Time Taken', value=duration) #00:00:00.2887780
             embed.add_embed_field(name='Files', value='{:,}'.format(int(output["ExaminedFiles"]))) # f'{1000000:,}'
