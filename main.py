@@ -1,6 +1,7 @@
 from flask import Flask, request, render_template
 import requests
 from discord_webhook import DiscordWebhook, DiscordEmbed
+import datetime
 
 colour = {}
 colour['Success'] = '7CFC00'
@@ -8,7 +9,6 @@ colour['Unknown'] = '909090'
 colour['Warning'] = 'FFBF00'
 colour['Error'] = 'FF0000'
 colour['FATAL'] = 'FF0000'
-
 
 app = Flask(__name__)
 
@@ -37,13 +37,35 @@ def report():
                 if ':' in item:
                     i = item.split(': ')
                     output[i[0]]=i[1]
-            webhook = DiscordWebhook(url=webhookurl)
+            
+            output['Duration'] = output['Duration'].split(':')
+            duration = ''
+            if output['Duration'][0] != '00':
+                duration = f"{duration} {output['Duration'][0]} Hours "
+            if output['Duration'][1] != '00':
+                duration = f"{duration} {output['Duration'][0]} Minutes "
+            if output['Duration'][2] != '00':
+                seconds = int(round(float(output['Duration'][0]),1))
+                duration = f"{duration} {seconds} Seconds "                
+            
+            webhook = DiscordWebhook(url=webhookurl, username=f'{output["MainOperation"]} Notification')
             size = sizeof_fmt(output["SizeOfExaminedFiles"])
             title = f'Duplicati job {name} {output["MainOperation"]} {output["ParsedResult"]}'
-            description=f'{output["MainOperation"]} started at {output["BeginTime"]}\n{output["MainOperation"]} took {output["Duration"]}\nNumber of files {output["ExaminedFiles"]}\nNumber of modified files {output["ModifiedFiles"]}\nSize of backup {size}'
-            footer = f'{output["ParsedResult"]}'
+            #description=f'{output["MainOperation"]} started at {output["BeginTime"]}\n{output["MainOperation"]} took {output["Duration"]}\nNumber of files {output["ExaminedFiles"]}\nNumber of modified files {output["ModifiedFiles"]}\nSize of backup {size}'
+            footer = f'{output["MainOperation"]} {output["ParsedResult"]}'
             color = colour[output["ParsedResult"]]
-            embed = DiscordEmbed(title=title,description=description,color=color)
+            embed = DiscordEmbed(title=title,color=color)
+            started = output["BeginTime"].split('(')
+            embed.set_author(
+                name="Duplicati Discord Notification",
+                url="https://duplicati-notifications.lloyd.ws/",
+            )
+            embed.add_embed_field(name='Started', value=started[0]) # 2/7/2022 7:25:05 AM (1644218705)  %-m/%-d/%Y %H:%-M:%S ()
+            embed.add_embed_field(name='Length', value=duration) #00:00:00.2887780
+            embed.add_embed_field(name='Files', value=output["ExaminedFiles"])
+            embed.add_embed_field(name='Deleted Files', value=output["DeletedFiles"])
+            embed.add_embed_field(name='Modified Files', value=output["ModifiedFiles"])
+            embed.add_embed_field(name='Size', value=size)
             embed.set_footer(text=footer)
             webhook.add_embed(embed)
             response = webhook.execute()
