@@ -38,7 +38,6 @@ def report():
                     i = item.split(': ')
                     output[i[0]]=i[1]
             
-            output['Duration'] = '00:11:54.9991230'
             output['Duration'] = output['Duration'].split(':')
             print(output['Duration'])
             duration = ''
