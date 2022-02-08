@@ -44,7 +44,15 @@ def report():
                 if item.startswith(tuple(dataitems)):
                     if ':' in item:
                         i = item.split(': ')
-                        output[i[0]]=i[1] 
+                        output[i[0]]=i[1]
+                else:
+                    if 'Access to the path' in item:
+                        error = item.split('Access to the path ')
+                        errors.append(error[1])
+            errors = list(dict.fromkeys(errors))
+            erroroutput = ''
+            for e in errors[:2]:
+                erroroutput = f'{erroroutput}\n Access to path {e}'
             output['Duration'] = output['Duration'].split(':')
             duration = ''
             if output['Duration'][0] != '00':
@@ -58,15 +66,18 @@ def report():
             size = sizeof_fmt(output["SizeOfExaminedFiles"])
             title = f'{icon[output["ParsedResult"]]} Duplicati job {name} {output["MainOperation"]} {output["ParsedResult"]} {icon[output["ParsedResult"]]}'
             footer = f'{output["MainOperation"]} {output["ParsedResult"]}'
-            embed = DiscordEmbed(title=title,color=colour[output["ParsedResult"]])
+            embed = DiscordEmbed(title=title,color=colour[output["ParsedResult"]], description=erroroutput)
             output["BeginTime"] = output["BeginTime"].split('(')
             embed.set_author(name="Duplicati Discord Notification",url="https://duplicati-notifications.lloyd.ws/")
             embed.add_embed_field(name='Started', 
                                     value=output["BeginTime"][0]) # 2/7/2022 7:25:05 AM (1644218705)  %-m/%-d/%Y %H:%-M:%S ()
             embed.add_embed_field(name='Time Taken', value=duration) #00:00:00.2887780
-            embed.add_embed_field(name='Files', value='{:,}'.format(int(output["ExaminedFiles"]))) # f'{1000000:,}'
+            embed.add_embed_field(name='No. Files', value='{:,}'.format(int(output["ExaminedFiles"])))
+            embed.add_embed_field(name='Added Files', value='{:,}'.format(int(output["AddedFiles"])))
+            embed.add_embed_field(name='Added Size', value=sizeof_fmt(int(output["SizeOfAddedFiles"]))) # f'{1000000:,}'
             embed.add_embed_field(name='Deleted Files', value='{:,}'.format(int(output["DeletedFiles"])))
             embed.add_embed_field(name='Modified Files', value='{:,}'.format(int(output["ModifiedFiles"])))
+            embed.add_embed_field(name='Modified Size', value=sizeof_fmt(int(output["SizeOfModifiedFiles"])))
             embed.add_embed_field(name='Size', value=size)
             embed.set_footer(text=footer)
             webhook.add_embed(embed)
