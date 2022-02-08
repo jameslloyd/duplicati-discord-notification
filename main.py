@@ -8,6 +8,13 @@ colour['Unknown'] = '909090'
 colour['Warning'] = 'FFBF00'
 colour['Error'] = 'FF0000'
 colour['FATAL'] = 'FF0000'
+icon = {}
+icon['Success'] = ':white_check_mark:'
+icon['Warning'] = ':warning:'
+icon['Error'] = ':no_entry:'
+icon['Uknown'] = ':grey_question:'
+icon['FATAL'] = ':fire:'
+
 dataitems = ['DeletedFiles','DeletedFolders','ModifiedFiles','ExaminedFiles','OpenedFiles','AddedFiles','SizeOfModifiedFiles','SizeOfAddedFiles','SizeOfExaminedFiles','SizeOfOpenedFiles','NotProcessedFiles','AddedFolders','TooLargeFiles','FilesWithError','ModifiedFolders','ModifiedSymlinks','AddedSymlinks','DeletedSymlinks','PartialBackup','Dryrun','MainOperation','ParsedResult','Version','EndTime','BeginTime','Duration','MessagesActualLength','WarningsActualLength','ErrorsActualLength']
 app = Flask(__name__)
 
@@ -32,13 +39,13 @@ def report():
             name = request.args.get('name')
             data = message.split('\n')
             output = {}
+            errors = []
             for item in data:
                 if item.startswith(tuple(dataitems)):
                     if ':' in item:
                         i = item.split(': ')
                         output[i[0]]=i[1] 
             output['Duration'] = output['Duration'].split(':')
-            print(output['Duration'])
             duration = ''
             if output['Duration'][0] != '00':
                 duration = f"{duration} {output['Duration'][0]} Hrs "
@@ -49,11 +56,11 @@ def report():
                 duration = f"{duration} {seconds} Secs "                
             webhook = DiscordWebhook(url=webhookurl, username=f'{output["MainOperation"]} Notification')
             size = sizeof_fmt(output["SizeOfExaminedFiles"])
-            title = f'Duplicati job {name} {output["MainOperation"]} {output["ParsedResult"]}'
+            title = f'{icon[output["ParsedResult"]]} Duplicati job {name} {output["MainOperation"]} {output["ParsedResult"]} {icon[output["ParsedResult"]]}'
             footer = f'{output["MainOperation"]} {output["ParsedResult"]}'
             embed = DiscordEmbed(title=title,color=colour[output["ParsedResult"]])
             output["BeginTime"] = output["BeginTime"].split('(')
-            embed.set_author(name="Duplicati Discord Notification",url="https://duplicati-notifications.lloyd.ws/", )
+            embed.set_author(name="Duplicati Discord Notification",url="https://duplicati-notifications.lloyd.ws/")
             embed.add_embed_field(name='Started', 
                                     value=output["BeginTime"][0]) # 2/7/2022 7:25:05 AM (1644218705)  %-m/%-d/%Y %H:%-M:%S ()
             embed.add_embed_field(name='Time Taken', value=duration) #00:00:00.2887780
