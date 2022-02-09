@@ -1,1 +1,4 @@
 runtime: python39
+env_variables:
+  DATABASE: True
+  PROJECTID: duplicati-notifications

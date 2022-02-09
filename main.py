@@ -1,6 +1,26 @@
+import requests, os
 from flask import Flask, request, render_template
-import requests
 from discord_webhook import DiscordWebhook, DiscordEmbed
+from google.cloud import secretmanager
+from pymongo import MongoClient
+import datetime
+
+def access_secret_version(secret_id, PROJECT_ID, version_id="latest"):
+    # Create the Secret Manager client.
+    client = secretmanager.SecretManagerServiceClient()
+    # Build the resource name of the secret version.
+    name = f"projects/{PROJECT_ID}/secrets/{secret_id}/versions/{version_id}"
+    # Access the secret version.
+    response = client.access_secret_version(name=name)
+    # Return the decoded payload.
+    return response.payload.data.decode('UTF-8')
+
+DATABASE = os.getenv('DATABASE',False)
+PROJECTID = os.getenv('PROJECTID',False)
+if DATABASE == 'True' and PROJECTID:
+    client = MongoClient(access_secret_version('mongodburl',PROJECTID))
+    db = client.duplicati
+    collection = db.duplicati
 
 colour = {}
 colour['Success'] = '7CFC00'
@@ -39,6 +59,9 @@ def report():
             name = request.args.get('name')
             data = message.split('\n')
             output = {}
+            output['ip'] = request.remote_addr
+            output['name'] = name
+            output['webhook'] = webhookurl
             errors = []
             for item in data:
                 if item.startswith(tuple(dataitems)):
@@ -82,10 +105,16 @@ def report():
             embed.set_footer(text=footer)
             webhook.add_embed(embed)
             webhook.execute()
+            if DATABASE == 'True' and PROJECTID:
+                output['when'] = datetime.datetime.utcnow()
+                print('trying to insert')
+                collection.insert_one(output)
         if request.args.get('duplicatimonitor'):
             postdata = {'message': message}
             requests.post(request.args.get('duplicatimonitor'), data = postdata)
     return '{}'
+    
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0")

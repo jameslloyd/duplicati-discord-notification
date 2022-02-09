@@ -2,3 +2,5 @@ flask
 discord-webhook
 requests
 gunicorn
+google-cloud-secret-manager
+pymongo[srv]
