@@ -38,7 +38,7 @@
           Other Backups
         </button>
         <ul class="dropdown-menu" aria-labelledby="BackupListButton">
-        {%for backup in backups %}<li><a class="dropdown-item" href="{{ url_for('chart')}}?name={{backup}}&webhook={{ request.args.get('webhook') }}">{{backup}}</a></li>{% endfor %}
+        {%for backup in backups %}<li><a class="dropdown-item {%if request.args.get('name') == backup %}disabled{% endif %}" href="{{ url_for('chart')}}?name={{backup}}&webhook={{ request.args.get('webhook') }}" >{{backup}}</a></li>{% endfor %}
         </ul>
       </div>
     {% endif %}
