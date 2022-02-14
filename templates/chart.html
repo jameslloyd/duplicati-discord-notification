@@ -32,7 +32,8 @@
       </header>
     <script src="//cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.4/Chart.min.js"></script>
     <canvas id="ModifiedFiles" width="400" height="100"></canvas>
-
+    <canvas id="SizeOfBackup" width="400" height="100"></canvas>
+    <canvas id="TimeTaken" width="400" height="100"></canvas>
 
     <script type="text/javascript">
 
@@ -110,6 +111,7 @@
               "fontStyle": "italic"
             },
             "display": true,
+            "min": 400,
             "gridLines": {
               "display": true,
               "lineWidth": 2,
@@ -137,13 +139,204 @@
       }
     };
     
-        var myChart = new Chart(ctx, {
+        var ModifiedFiles = new Chart(ctx, {
             type: 'line',
             data: ModifiedFilesData,
             options: options
         });
 
+        var ctx = document.getElementById('SizeOfBackup').getContext('2d');
+        var sizedata = {
+      "labels": {{when|safe}},
+      "datasets": [
+        {
+          "label": "Total Backup Size (GB)",
+          "backgroundColor": "#f7891b",
+          "fill": false,
+          "data": {{size|safe}},
+          "borderColor": "#f7891b",
+          "borderWidth": "3"
+        }
+      ]
+    };
+        var soptions = {
+      "title": {
+        "display": true,
+        "text": "Total Size of Backup",
+        "position": "bottom",
+        "fullWidth": true,
+        "fontColor": "#aa7942",
+        "fontSize": 16
+      },
+      "legend": {
+        "display": false,
+        "fullWidth": true,
+        "position": "top"
+      },
+      "scales": {
+        "yAxes": [
+          {
+            "ticks": {
+              "beginAtZero": false,
+              "display": true
+            },
+            "gridLines": {
+              "display": true,
+              "lineWidth": 2,
+              "drawOnChartArea": true,
+              "drawTicks": true,
+              "tickMarkLength": 1,
+              "offsetGridLines": true,
+              "zeroLineColor": "#942192",
+              "color": "#d6d6d6",
+              "zeroLineWidth": 2
+            },
+            "scaleLabel": {
+              "display": true,
+              "labelString": "Total Size of Backup (GB)"
+            },
+            "display": true,
+            "type": "linear",
+            min: 500
+          }
+        ],
+        "xAxes": {
+          "0": {
+            "ticks": {
+              "display": true,
+              "fontSize": 14,
+              "fontStyle": "italic"
+            },
+            "display": true,
+            "gridLines": {
+              "display": true,
+              "lineWidth": 2,
+              "drawOnChartArea": false,
+              "drawTicks": true,
+              "tickMarkLength": 12,
+              "zeroLineWidth": 2,
+              "offsetGridLines": true,
+              "color": "#942192",
+              "zeroLineColor": "#942192"
+            },
+            "scaleLabel": {
+              "fontSize": 16,
+              "display": true,
+              "fontStyle": "normal"
+            }
+          }
+        }
+      },
+      "tooltips": {
+        "enabled": true,
+        "mode": "label",
+        "caretSize": 10,
+        "backgroundColor": "#00fa92"
+      }
+    };
+    
+        var SizeOfBackup = new Chart(ctx, {
+            type: 'line',
+            data: sizedata,
+            options: soptions
+        });
 
+
+        var ctx = document.getElementById('TimeTaken').getContext('2d');
+        var timedata = {
+      "labels": {{when|safe}},
+      "datasets": [
+        {
+          "label": "Time taken in seconds",
+          "backgroundColor": "#f71b1b",
+          "fill": false,
+          "data": {{timetaken|safe}},
+          "borderColor": "#f71b1b",
+          "borderWidth": "3"
+        }
+      ]
+    };
+        var soptions = {
+      "title": {
+        "display": true,
+        "text": "Time Taken",
+        "position": "bottom",
+        "fullWidth": true,
+        "fontColor": "#aa7942",
+        "fontSize": 16
+      },
+      "legend": {
+        "display": false,
+        "fullWidth": true,
+        "position": "top"
+      },
+      "scales": {
+        "yAxes": [
+          {
+            "ticks": {
+              "beginAtZero": false,
+              "display": true
+            },
+            "gridLines": {
+              "display": true,
+              "lineWidth": 2,
+              "drawOnChartArea": true,
+              "drawTicks": true,
+              "tickMarkLength": 1,
+              "offsetGridLines": true,
+              "zeroLineColor": "#942192",
+              "color": "#d6d6d6",
+              "zeroLineWidth": 2
+            },
+            "scaleLabel": {
+              "display": true,
+              "labelString": "Time Taken (Seconds)"
+            },
+            "display": true,
+            "type": "linear",
+            min: 500
+          }
+        ],
+        "xAxes": {
+          "0": {
+            "ticks": {
+              "display": true,
+              "fontSize": 14,
+              "fontStyle": "italic"
+            },
+            "display": true,
+            "gridLines": {
+              "display": true,
+              "lineWidth": 2,
+              "drawOnChartArea": false,
+              "drawTicks": true,
+              "tickMarkLength": 12,
+              "zeroLineWidth": 2,
+              "offsetGridLines": true,
+              "color": "#942192",
+              "zeroLineColor": "#942192"
+            },
+            "scaleLabel": {
+              "fontSize": 16,
+              "display": true,
+              "fontStyle": "normal"
+            }
+          }
+        }
+      },
+      "tooltips": {
+        "enabled": true,
+        "mode": "label",
+        "caretSize": 10,
+        "backgroundColor": "#00fa92"
+      }
+    };
+    
+        var TimeTaken = new Chart(ctx, {
+            type: 'line',
+            data: timedata,
+            options: soptions
+        });
     </script>
 
 
