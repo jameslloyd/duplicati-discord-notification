@@ -1,9 +1,8 @@
-import requests, os
-from flask import Flask, request, render_template
+import requests, os, datetime, json
+from flask import Flask, request, render_template, abort
 from discord_webhook import DiscordWebhook, DiscordEmbed
 from google.cloud import secretmanager
 from pymongo import MongoClient
-import datetime
 
 def access_secret_version(secret_id, PROJECT_ID, version_id="latest"):
     # Create the Secret Manager client.
@@ -21,6 +20,8 @@ if DATABASE == 'True' and PROJECTID:
     client = MongoClient(access_secret_version('mongodburl',PROJECTID))
     db = client.duplicati
     collection = db.duplicati
+
+versionurl ='https://updates.duplicati.com/beta/latest-installers.js'
 
 colour = {}
 colour['Success'] = '7CFC00'
@@ -45,6 +46,18 @@ def sizeof_fmt(num, suffix="B"):
             return f"{num:3.1f}{unit}{suffix}"
         num /= 1024.0
     return f"{num:.1f}Yi{suffix}"
+
+def get_url(url):
+    r = requests.get(url)
+    if r.status_code == 200:
+        return r.text
+    else:
+        print(r.status_code)
+        return False
+
+def get_json(text):
+    obj = text[text.find('{') : text.rfind('}')+1]
+    return json.loads(obj)
 
 @app.route("/")
 def home():
@@ -84,14 +97,23 @@ def report():
                 duration = f"{duration} {output['Duration'][1]} Mins "
             if output['Duration'][2] != '00':
                 seconds = int(round(float(output['Duration'][2]),1))
-                duration = f"{duration} {seconds} Secs "                
+                duration = f"{duration} {seconds} Secs "        
+
+            # duplicati version check
+            latest_duplicati_versions = get_json(get_url(versionurl))
+            latest_version = latest_duplicati_versions['version']
+            current_version = output['Version'].split(' ')
+            current_version = current_version[0]
+            if current_version != latest_version:
+                erroroutput = f"{erroroutput} \n :warning: Duplicati isn't running on the latest version :warning:"
+
             webhook = DiscordWebhook(url=webhookurl, username=f'{output["MainOperation"]} Notification')
             size = sizeof_fmt(output["SizeOfExaminedFiles"])
             title = f'{icon[output["ParsedResult"]]} Duplicati job {name} {output["MainOperation"]} {output["ParsedResult"]} {icon[output["ParsedResult"]]}'
             footer = f'{output["MainOperation"]} {output["ParsedResult"]}'
             embed = DiscordEmbed(title=title,color=colour[output["ParsedResult"]], description=erroroutput)
             output["BeginTime"] = output["BeginTime"].split('(')
-            embed.set_author(name="Duplicati Discord Notification",url="https://duplicati-notifications.lloyd.ws/")
+            embed.set_author(name="Duplicati Discord Notification",url=f"https://duplicati-notifications.lloyd.ws/chart?name={name}&webhook={webhookurl}")
             embed.add_embed_field(name='Started', 
                                     value=output["BeginTime"][0]) # 2/7/2022 7:25:05 AM (1644218705)  %-m/%-d/%Y %H:%-M:%S ()
             embed.add_embed_field(name='Time Taken', value=duration) #00:00:00.2887780
@@ -113,8 +135,39 @@ def report():
             postdata = {'message': message}
             requests.post(request.args.get('duplicatimonitor'), data = postdata)
     return '{}'
-    
 
+@app.route("/chart", methods=['GET'])
+def chart():
+    name = request.args.get('name','')
+    webhook = request.args.get('webhook','')
+    if name == '' or webhook == '':
+        abort(404)
+    query = [
+            {
+                '$match': {
+                    'name': name, 
+                    'webhook': webhook
+                }
+            }, {
+                '$sort': {
+                    'when': -1
+                }
+            }
+        ]
+    data = list(collection.aggregate(query))
+    if len(data) < 1:
+        abort(404)
+    addedfiles = []
+    when = []
+    modifiedfiles = []
+    deletedfiles = []
+    for d in data:
+        addedfiles.append(d['AddedFiles'])
+        deletedfiles.append(d['DeletedFiles'])
+        modifiedfiles.append(d['ModifiedFiles'])
+        when.append(d['when'].strftime("%m/%d/%Y"))
+
+    return render_template('chart.html', when=when,addedfiles=addedfiles,modifiedfiles=modifiedfiles,deletedfiles=deletedfiles)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0")
