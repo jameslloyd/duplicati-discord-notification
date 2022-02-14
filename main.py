@@ -163,15 +163,17 @@ def chart():
     deletedfiles = []
     timetaken = []
     size =[]
+    backups = list(collection.distinct("name",{"webhook" : webhook}))
+    print(backups)
     for d in data:
         timetaken.append((int(d['Duration'][0])*60*60) + (int(d['Duration'][1])*60) + float(d['Duration'][2]))
         size.append(float(d['SizeOfExaminedFiles'])/1073741824)
         addedfiles.append(d['AddedFiles'])
         deletedfiles.append(d['DeletedFiles'])
         modifiedfiles.append(d['ModifiedFiles'])
-        when.append(d['when'].strftime("%m/%d/%Y"))
+        when.append(d['when'].strftime("%d/%m/%Y"))
 
-    return render_template('chart.html', when=when,addedfiles=addedfiles,modifiedfiles=modifiedfiles,deletedfiles=deletedfiles,size=size,timetaken=timetaken)
+    return render_template('chart.html', when=when,addedfiles=addedfiles,modifiedfiles=modifiedfiles,deletedfiles=deletedfiles,size=size,timetaken=timetaken,backups=backups)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0")
