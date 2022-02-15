@@ -31,7 +31,8 @@
     <header class="d-flex align-items-center pb-3 mb-5 border-bottom">
         <a href="/" class="d-flex align-items-center text-dark text-decoration-none"><span class="fs-4">Duplicati Notifications</span></a>
       </header>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.4/Chart.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
     {% if backups| length > 1 %}
     <div class="dropdown">
         <button class="btn btn-secondary dropdown-toggle" type="button" id="BackupListButton" data-bs-toggle="dropdown" aria-expanded="false">
@@ -42,315 +43,153 @@
         </ul>
       </div>
     {% endif %}
-    <canvas id="ModifiedFiles" width="400" height="100"></canvas>
-    <canvas id="SizeOfBackup" width="400" height="100"></canvas>
-    <canvas id="TimeTaken" width="400" height="100"></canvas>
+    <canvas id="Files" width="400" height="100"></canvas>
+    <canvas id="Size" width="400" height="100"></canvas>
+    <canvas id="Time" width="400" height="100"></canvas>
+
 
     <script type="text/javascript">
+        var timeFormat = 'YYYY/MM/DD HH:MM:SS';
 
-        var ctx = document.getElementById('ModifiedFiles').getContext('2d');
-        var ModifiedFilesData = {
-      "labels":{{when|safe}},
-      "datasets": [
-        {
-          "label": "Modified Files",
-          "borderColor": "#1f61f0",
-          "backgroundColor": "#1f61f0",
-          "fill": false,
-          "data": {{modifiedfiles|safe}}
-        },
-        {
-            "label": "Added Files",
-            "borderColor": "#8b1ff0",
-            "backgroundColor": "#8b1ff0",
-            "fill": false,
-            "data": {{addedfiles|safe}}
-          },
-          {
-              "label": "Deleted Files",
-              "borderColor": "#1ff08b",
-              "backgroundColor": "#1ff08b",
-              "fill": false,
-              "data": {{deletedfiles|safe}}
+        var Filesconfig = {
+            type:    'line',
+            data:    {
+                datasets: [
+                    {
+                        label: "Added Files",
+                        data: [{% for w in when %}{x: Date.parse("{{w}}"), y: {{addedfiles[loop.index -1]}}},  {% endfor %}],
+                        fill: false,
+                        borderColor: '#1f61f0'
+                    },
+                    {
+                        label: "Deleted Files",
+                        data: [{% for w in when %}{x: Date.parse("{{w}}"), y: {{deletedfiles[loop.index -1]}}},  {% endfor %}],
+                        fill:  false,
+                        borderColor: '#8b1ff0'
+                    },
+                    {
+                        label: "Modified Files",
+                        data: [{% for w in when %}{x: Date.parse("{{w}}"), y: {{modifiedfiles[loop.index -1]}}},  {% endfor %}],
+                        fill:  false,
+                        borderColor: '#1ff08b'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                title:      {
+                    display: true,
+                    text:    "Files"
+                },
+                scales:     {
+                    xAxes: [{
+                        type:       "time",
+                        time:       {
+                            unit: 'day',
+                            tooltipFormat: 'll'
+                        },
+                        scaleLabel: {
+                            display:     true,
+                            labelString: 'Date'
+                        }
+                    }],
+                    yAxes: [{
+                        scaleLabel: {
+                            display:     true,
+                            labelString: 'No. Files'
+                        }
+                    }]
+                }
             }
-      ]
-    };
-        var options = {
-      "title": {
-        "display": true,
-        "text": "{{ request.args.get('name') }}",
-        "position": "bottom",
-        "fullWidth": true,
-        "fontColor": "#aa7942",
-        "fontSize": 16
-      },
-      "legend": {
-        "display": true,
-        "fullWidth": true,
-        "position": "top"
-      },
-      "scales": {
-        "yAxes": [
-          {
-            "ticks": {
-              "beginAtZero": true,
-              "display": true
+        };
+        var Sizeconfig = {
+            type:    'line',
+            data:    {
+                datasets: [
+                    {
+                        label: "backup Size",
+                        data: [{% for w in when %}{x: Date.parse("{{w}}"), y: {{size[loop.index -1]}}},  {% endfor %}],
+                        fill: false,
+                        borderColor: '#f7891b'
+                    }
+                ]
             },
-            "gridLines": {
-              "display": true,
-              "lineWidth": 2,
-              "drawOnChartArea": true,
-              "drawTicks": true,
-              "tickMarkLength": 1,
-              "offsetGridLines": true,
-              "zeroLineColor": "#942192",
-              "color": "#d6d6d6",
-              "zeroLineWidth": 2
-            },
-            "scaleLabel": {
-              "display": true,
-              "labelString": "No. of Files"
-            },
-            "display": true
-          }
-        ],
-        "xAxes": {
-          "0": {
-            "ticks": {
-              "display": true,
-              "fontSize": 14,
-              "fontStyle": "italic"
-            },
-            "display": true,
-            "min": 400,
-            "gridLines": {
-              "display": true,
-              "lineWidth": 2,
-              "drawOnChartArea": false,
-              "drawTicks": true,
-              "tickMarkLength": 12,
-              "zeroLineWidth": 2,
-              "offsetGridLines": true,
-              "color": "#942192",
-              "zeroLineColor": "#942192"
-            },
-            "scaleLabel": {
-              "fontSize": 16,
-              "display": true,
-              "fontStyle": "normal"
+            options: {
+                responsive: true,
+                title:      {
+                    display: true,
+                    text:    "Size"
+                },
+                scales:     {
+                    xAxes: [{
+                        type:       "time",
+                        time:       {
+                            unit: 'day',
+                            tooltipFormat: 'll'
+                        },
+                        scaleLabel: {
+                            display:     true,
+                            labelString: 'Date'
+                        }
+                    }],
+                    yAxes: [{
+                        scaleLabel: {
+                            display:     true,
+                            labelString: 'GB\'s'
+                        }
+                    }]
+                }
             }
-          }
-        }
-      },
-      "tooltips": {
-        "enabled": true,
-        "mode": "label",
-        "caretSize": 10,
-        "backgroundColor": "#555"
-      }
-    };
-    
-        var ModifiedFiles = new Chart(ctx, {
-            type: 'line',
-            data: ModifiedFilesData,
-            options: options
-        });
+        };
+        var Timeconfig = {
+            type:    'line',
+            data:    {
+                datasets: [
+                    {
+                        label: "Time Taken",
+                        data: [{% for w in when %}{x: Date.parse("{{w}}"), y: {{timetaken[loop.index -1]}}},  {% endfor %}],
+                        fill: false,
+                        borderColor: '#f71b1b'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                title:      {
+                    display: true,
+                    text:    "Time Taken"
+                },
+                scales:     {
+                    xAxes: [{
+                        type:       "time",
+                        time:       {
+                            unit: 'day',
+                            tooltipFormat: 'll'
+                        },
+                        scaleLabel: {
+                            display:     true,
+                            labelString: 'Date'
+                        }
+                    }],
+                    yAxes: [{
+                        scaleLabel: {
+                            display:     true,
+                            labelString: 'Seconds'
+                        }
+                    }]
+                }
+            }
+        };
+        window.onload = function () {
+            var ctx       = document.getElementById("Files").getContext("2d");
+            var Sizectx       = document.getElementById("Size").getContext("2d");
+            var Timectx       = document.getElementById("Time").getContext("2d");
+            window.myLine = new Chart(Sizectx, Sizeconfig);
+            window.myLine = new Chart(ctx, Filesconfig);
+            window.myLine = new Chart(Timectx, Timeconfig);
+        };
 
-        var ctx = document.getElementById('SizeOfBackup').getContext('2d');
-        var sizedata = {
-      "labels": {{when|safe}},
-      "datasets": [
-        {
-          "label": "Total Backup Size (GB)",
-          "backgroundColor": "#f7891b",
-          "fill": false,
-          "data": {{size|safe}},
-          "borderColor": "#f7891b",
-          "borderWidth": "3"
-        }
-      ]
-    };
-        var soptions = {
-      "title": {
-        "display": true,
-        "text": "Total Size of Backup",
-        "position": "bottom",
-        "fullWidth": true,
-        "fontColor": "#aa7942",
-        "fontSize": 16
-      },
-      "legend": {
-        "display": false,
-        "fullWidth": true,
-        "position": "top"
-      },
-      "scales": {
-        "yAxes": [
-          {
-            "ticks": {
-              "beginAtZero": false,
-              "display": true
-            },
-            "gridLines": {
-              "display": true,
-              "lineWidth": 2,
-              "drawOnChartArea": true,
-              "drawTicks": true,
-              "tickMarkLength": 1,
-              "offsetGridLines": true,
-              "zeroLineColor": "#942192",
-              "color": "#d6d6d6",
-              "zeroLineWidth": 2
-            },
-            "scaleLabel": {
-              "display": true,
-              "labelString": "Total Size of Backup (GB)"
-            },
-            "display": true,
-            "type": "linear",
-            min: 500
-          }
-        ],
-        "xAxes": {
-          "0": {
-            "ticks": {
-              "display": true,
-              "fontSize": 14,
-              "fontStyle": "italic"
-            },
-            "display": true,
-            "gridLines": {
-              "display": true,
-              "lineWidth": 2,
-              "drawOnChartArea": false,
-              "drawTicks": true,
-              "tickMarkLength": 12,
-              "zeroLineWidth": 2,
-              "offsetGridLines": true,
-              "color": "#942192",
-              "zeroLineColor": "#942192"
-            },
-            "scaleLabel": {
-              "fontSize": 16,
-              "display": true,
-              "fontStyle": "normal"
-            }
-          }
-        }
-      },
-      "tooltips": {
-        "enabled": true,
-        "mode": "label",
-        "caretSize": 10,
-        "backgroundColor": "#555"
-      }
-    };
-    
-        var SizeOfBackup = new Chart(ctx, {
-            type: 'line',
-            data: sizedata,
-            options: soptions
-        });
-
-
-        var ctx = document.getElementById('TimeTaken').getContext('2d');
-        var timedata = {
-      "labels": {{when|safe}},
-      "datasets": [
-        {
-          "label": "Time taken in seconds",
-          "backgroundColor": "#f71b1b",
-          "fill": false,
-          "data": {{timetaken|safe}},
-          "borderColor": "#f71b1b",
-          "borderWidth": "3"
-        }
-      ]
-    };
-        var soptions = {
-      "title": {
-        "display": true,
-        "text": "Time Taken",
-        "position": "bottom",
-        "fullWidth": true,
-        "fontColor": "#aa7942",
-        "fontSize": 16
-      },
-      "legend": {
-        "display": false,
-        "fullWidth": true,
-        "position": "top"
-      },
-      "scales": {
-        "yAxes": [
-          {
-            "ticks": {
-              "beginAtZero": false,
-              "display": true
-            },
-            "gridLines": {
-              "display": true,
-              "lineWidth": 2,
-              "drawOnChartArea": true,
-              "drawTicks": true,
-              "tickMarkLength": 1,
-              "offsetGridLines": true,
-              "zeroLineColor": "#942192",
-              "color": "#d6d6d6",
-              "zeroLineWidth": 2
-            },
-            "scaleLabel": {
-              "display": true,
-              "labelString": "Time Taken (Seconds)"
-            },
-            "display": true,
-            "type": "linear",
-            min: 500
-          }
-        ],
-        "xAxes": {
-          "0": {
-            "ticks": {
-              "display": true,
-              "fontSize": 14,
-              "fontStyle": "italic"
-            },
-            "display": true,
-            "gridLines": {
-              "display": true,
-              "lineWidth": 2,
-              "drawOnChartArea": false,
-              "drawTicks": true,
-              "tickMarkLength": 12,
-              "zeroLineWidth": 2,
-              "offsetGridLines": true,
-              "color": "#942192",
-              "zeroLineColor": "#942192"
-            },
-            "scaleLabel": {
-              "fontSize": 16,
-              "display": true,
-              "fontStyle": "normal"
-            }
-          }
-        }
-      },
-      "tooltips": {
-        "enabled": true,
-        "mode": "label",
-        "caretSize": 10,
-        "backgroundColor": "#555"
-      }
-    };
-    
-        var TimeTaken = new Chart(ctx, {
-            type: 'line',
-            data: timedata,
-            options: soptions
-        });
     </script>
-
-
 </div>
 <div class="container">
     <footer class="py-3 my-4">
