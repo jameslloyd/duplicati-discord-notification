@@ -3,6 +3,7 @@ from flask import Flask, request, render_template, abort
 from discord_webhook import DiscordWebhook, DiscordEmbed
 from google.cloud import secretmanager
 from pymongo import MongoClient
+import logging
 
 def access_secret_version(secret_id, PROJECT_ID, version_id="latest"):
     # Create the Secret Manager client.
@@ -66,8 +67,8 @@ def home():
 @app.route("/report", methods=['POST'])
 def report():
     if request.args.get('webhook'):
-        webhookurl = request.args.get('webhook')
-        message = request.form.get('message')
+        webhookurl = request.args.get('webhook', '')
+        message = request.form.get('message','')
         if request.args.get('name'):
             name = request.args.get('name')
             data = message.split('\n')
@@ -126,7 +127,11 @@ def report():
             embed.add_embed_field(name='Size', value=size)
             embed.set_footer(text=footer)
             webhook.add_embed(embed)
-            webhook.execute()
+            response = webhook.execute()
+            if response.status_code == 200:
+                logging.info(f'[WEBHOOK] Success to {webhookurl}')
+            else:
+                logging.warning(f'[WEBHOOK] Failed to {webhookurl}')
             if DATABASE == 'True' and PROJECTID:
                 output['when'] = datetime.datetime.utcnow()
                 print('trying to insert')
