@@ -145,20 +145,24 @@ def report():
 def chart():
     name = request.args.get('name','')
     webhook = request.args.get('webhook','')
+    length = int(request.args.get('length',30))
+    height = int(request.args.get('height',100))
     if name == '' or webhook == '':
         abort(404)
     query = [
-            {
-                '$match': {
-                    'name': name, 
-                    'webhook': webhook
-                }
-            }, {
-                '$sort': {
-                    'when': 1
-                }
+        {
+            '$match': {
+                'name': name, 
+                'webhook': webhook
             }
-        ]
+        }, {
+            '$sort': {
+                'when': -1
+            }
+        }, {
+            '$limit': length
+        }
+    ]
     data = list(collection.aggregate(query))
     if len(data) < 1:
         abort(404)
@@ -176,7 +180,7 @@ def chart():
         deletedfiles.append(d['DeletedFiles'])
         modifiedfiles.append(d['ModifiedFiles'])
         when.append(d['when'].strftime('%Y-%m-%dT%H:%M:%SZ'))  #2017-01-07 18:00:00
-    return render_template('chart.html', when=when,addedfiles=addedfiles,modifiedfiles=modifiedfiles,deletedfiles=deletedfiles,size=size,timetaken=timetaken,backups=backups)
+    return render_template('chart.html', when=when,addedfiles=addedfiles,modifiedfiles=modifiedfiles,deletedfiles=deletedfiles,size=size,timetaken=timetaken,backups=backups,height=height)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0")
