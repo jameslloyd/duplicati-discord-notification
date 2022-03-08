@@ -44,6 +44,8 @@
       </div>
     {% endif %}
     <canvas id="Files" height="{{height}}"></canvas>
+    <canvas id="DeletedFiles" height="{{height}}"></canvas>
+    <canvas id="ModifiedFiles" height="{{height}}"></canvas>
     <canvas id="Size" width="400" height="{{height}}"></canvas>
     <canvas id="Time" width="400" height="{{height}}"></canvas>
 
@@ -54,12 +56,19 @@
             type:    'line',
             data:    {
                 datasets: [
-                    { backgroundColor: '#1f61f0',borderColor: '#1f61f0',fill: false,label: "Added Files", data: [{% for w in when %}{x: Date.parse("{{w}}"), y: {{addedfiles[loop.index -1]}}},  {% endfor %}] },
-                    { backgroundColor: '#8b1ff0',borderColor: '#8b1ff0',fill: false,label: "Deleted Files", data: [{% for w in when %}{x: Date.parse("{{w}}"), y: {{deletedfiles[loop.index -1]}}},  {% endfor %}]},
-                    { backgroundColor: '#1ff08b',borderColor: '#1ff08b',fill: false,label: "Modified Files", data: [{% for w in when %}{x: Date.parse("{{w}}"), y: {{modifiedfiles[loop.index -1]}}},  {% endfor %}]}
-                    ]},
+                    { backgroundColor: '#1f61f0',borderColor: '#1f61f0',fill: false,label: "Added Files", data: [{% for w in when %}{x: Date.parse("{{w}}"), y: {{addedfiles[loop.index -1]}}},  {% endfor %}] }]},
             options: {responsive: true,title: { display: true, text: "Files" }, scales: { xAxes: [{ type: "time", time: { unit: 'day', tooltipFormat: 'll' }, scaleLabel: { display: true, labelString: 'Date' }}],yAxes: [{ scaleLabel: { display: true, labelString: 'No. Files' } }] } }
         };
+        var DeletedFilesconfig = {
+          type:    'line',
+          data:    { datasets: [ { backgroundColor: '#8b1ff0',borderColor: '#8b1ff0',label: "Deleted Files",fill: false, data: [{% for w in when %}{x: Date.parse("{{w}}"), y: {{deletedfiles[loop.index -1]}}},  {% endfor %}]} ]},
+          options: { responsive: true, title: { display: true, text: "Size" }, scales: { xAxes: [{type: "time", time: {unit: 'day', tooltipFormat: 'll' }, scaleLabel: { display: true, labelString: 'Date'}}], yAxes: [{scaleLabel: { display: true, labelString: 'GB\'s' }}]} }
+      };
+      var ModifiedFilesconfig = {
+        type:    'line',
+        data:    { datasets: [ { backgroundColor: '#1ff08b',borderColor: '#1ff08b',label: "Modified Files",fill: false, data: [{% for w in when %}{x: Date.parse("{{w}}"), y: {{modifiedfiles[loop.index -1]}}},  {% endfor %}]} ]},
+        options: { responsive: true, title: { display: true, text: "Size" }, scales: { xAxes: [{type: "time", time: {unit: 'day', tooltipFormat: 'll' }, scaleLabel: { display: true, labelString: 'Date'}}], yAxes: [{scaleLabel: { display: true, labelString: 'GB\'s' }}]} }
+    };     
         var Sizeconfig = {
             type:    'line',
             data:    { datasets: [ { backgroundColor:'#f7891b',borderColor: '#f7891b',label: "backup Size",fill: false, data: [{% for w in when %}{x: Date.parse("{{w}}"), y: {{size[loop.index -1]}}},  {% endfor %}]} ]},
@@ -74,8 +83,12 @@
         };
         window.onload = function () {
             var ctx       = document.getElementById("Files").getContext("2d");
+            var DeletedFilesCTX = document.getElementById("DeletedFiles").getContext("2d");
+            var ModifiedFilesCTX = document.getElementById("ModifiedFiles").getContext("2d");
             var Sizectx   = document.getElementById("Size").getContext("2d");
             var Timectx   = document.getElementById("Time").getContext("2d");
+            window.myLine = new Chart(DeletedFilesCTX, DeletedFilesconfig);
+            window.myLine = new Chart(ModifiedFilesCTX, ModifiedFilesconfig);
             window.myLine = new Chart(Sizectx, Sizeconfig);
             window.myLine = new Chart(ctx, Filesconfig);
             window.myLine = new Chart(Timectx, Timeconfig);
