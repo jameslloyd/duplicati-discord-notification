@@ -25,11 +25,11 @@ if DATABASE == 'True' and PROJECTID:
 versionurl ='https://updates.duplicati.com/beta/latest-installers.js'
 
 colour = {}
-colour['Success'] = '7CFC00'
-colour['Unknown'] = '909090'
-colour['Warning'] = 'FFBF00'
-colour['Error'] = 'FF0000'
-colour['FATAL'] = 'FF0000'
+colour['Success'] = 8190976
+colour['Unknown'] = 9474192
+colour['Warning'] = 16760576
+colour['Error'] = 16711680
+colour['FATAL'] = 16711680
 icon = {}
 icon['Success'] = ':white_check_mark:'
 icon['Warning'] = ':warning:'
@@ -70,7 +70,7 @@ def report():
         webhookurl = request.args.get('webhook', '')
         message = request.form.get('message','')
         if request.args.get('name'):
-            name = request.args.get('name')
+            name = request.args.get('name').replace(" ", "_")
             data = message.split('\n')
             output = {}
             output['ip'] = request.remote_addr
@@ -108,30 +108,94 @@ def report():
             if current_version != latest_version:
                 erroroutput = f"{erroroutput} \n :warning: Duplicati isn't running on the latest version :warning:"
 
-            webhook = DiscordWebhook(url=webhookurl, username=f'{output["MainOperation"]} Notification')
+            #webhook = DiscordWebhook(url=webhookurl, username=f'{output["MainOperation"]} Notification')
             size = sizeof_fmt(output["SizeOfExaminedFiles"])
             title = f'{icon[output["ParsedResult"]]} Duplicati job {name} {output["MainOperation"]} {output["ParsedResult"]} {icon[output["ParsedResult"]]}'
             footer = f'{output["MainOperation"]} {output["ParsedResult"]}'
-            embed = DiscordEmbed(title=title,color=colour[output["ParsedResult"]], description=erroroutput)
+            #embed = DiscordEmbed(title=title,color=colour[output["ParsedResult"]], description=erroroutput)
             output["BeginTime"] = output["BeginTime"].split('(')
-            embed.set_author(name="Duplicati Discord Notification",url=f"https://duplicati-notifications.lloyd.ws/chart?name={name}&webhook={webhookurl}")
-            embed.add_embed_field(name='Started', 
-                                    value=output["BeginTime"][0]) # 2/7/2022 7:25:05 AM (1644218705)  %-m/%-d/%Y %H:%-M:%S ()
-            embed.add_embed_field(name='Time Taken', value=duration) #00:00:00.2887780
-            embed.add_embed_field(name='No. Files', value='{:,}'.format(int(output["ExaminedFiles"])))
-            embed.add_embed_field(name='Added Files', value='{:,}'.format(int(output["AddedFiles"])))
-            embed.add_embed_field(name='Added Size', value=sizeof_fmt(int(output["SizeOfAddedFiles"]))) # f'{1000000:,}'
-            embed.add_embed_field(name='Deleted Files', value='{:,}'.format(int(output["DeletedFiles"])))
-            embed.add_embed_field(name='Modified Files', value='{:,}'.format(int(output["ModifiedFiles"])))
-            embed.add_embed_field(name='Modified Size', value=sizeof_fmt(int(output["SizeOfModifiedFiles"])))
-            embed.add_embed_field(name='Size', value=size)
-            embed.set_footer(text=footer)
-            webhook.add_embed(embed)
-            response = webhook.execute()
-            if response.status_code == 200:
-                logging.info(f'[WEBHOOK] Success to {webhookurl}')
-            else:
-                logging.warning(f'[WEBHOOK] Failed to {webhookurl}')
+            #embed.set_author(name="Duplicati Discord Notification",url=f"https://duplicati-notifications.lloyd.ws/chart?name={name}&webhook={webhookurl}")
+            #embed.add_embed_field(name='Started',       value=output["BeginTime"][0]) # 2/7/2022 7:25:05 AM (1644218705)  %-m/%-d/%Y %H:%-M:%S ()
+            #embed.add_embed_field(name='Time Taken',    value=duration) #00:00:00.2887780
+            #embed.add_embed_field(name='No. Files',     value='{:,}'.format(int(output["ExaminedFiles"])))
+            #embed.add_embed_field(name='Added Files',   value='{:,}'.format(int(output["AddedFiles"])))
+            #embed.add_embed_field(name='Added Size',    value=sizeof_fmt(int(output["SizeOfAddedFiles"]))) # f'{1000000:,}'
+            #embed.add_embed_field(name='Deleted Files', value='{:,}'.format(int(output["DeletedFiles"])))
+            #embed.add_embed_field(name='Modified Files',value='{:,}'.format(int(output["ModifiedFiles"])))
+            #embed.add_embed_field(name='Modified Size', value=sizeof_fmt(int(output["SizeOfModifiedFiles"])))
+            #embed.add_embed_field(name='Size', value=size)
+            #embed.set_footer(text=footer)
+            #webhook.add_embed(embed)
+            #response = webhook.execute()
+    
+            #if response.status_code == 200:
+            #    logging.info(f'[WEBHOOK] Success to {webhookurl}')
+            #else:
+            #    logging.warning(f'[WEBHOOK] Failed to {webhookurl}')
+
+            jsondata= {
+                 "embeds": [
+                    {
+                    "title": title,
+                    "color": colour[output["ParsedResult"]],
+                    "fields": [
+                        {
+                        "name": "Started",
+                        "value": output["BeginTime"][0],
+                        "inline": 'true'
+                        },
+                        {
+                        "name": "Time Taken",
+                        "value": duration,
+                        "inline": 'true'
+                        },
+                        {
+                        "name": "No. Files",
+                        "value": '{:,}'.format(int(output["ExaminedFiles"])),
+                        "inline": 'true'
+                        },
+                        {
+                        "name": "Added Files",
+                        "value": '{:,}'.format(int(output["AddedFiles"])),
+                        "inline": 'true'
+                        },
+                        {
+                        "name": "Added Size",
+                        "value": sizeof_fmt(int(output["SizeOfAddedFiles"])),
+                        "inline": 'true'
+                        },
+                        {
+                        "name": "Deleted Files",
+                        "value": '{:,}'.format(int(output["DeletedFiles"])),
+                        "inline": 'true'
+                        },
+                        {
+                        "name": "Modified Files",
+                        "value": '{:,}'.format(int(output["ModifiedFiles"])),
+                        "inline": 'true'
+                        },
+                        {
+                        "name": "Modified Files Size",
+                        "value": sizeof_fmt(int(output["SizeOfModifiedFiles"])),
+                        "inline": 'true'
+                        },
+                        {
+                        "name": "Size",
+                        "value": size,
+                        "inline": 'true'
+                        }
+                    ],
+                    "author": {
+                        "name": "Duplicati Discord Notification",
+                        "url": f"https://duplicati-notifications.lloyd.ws/chart?name={name}&webhook={webhookurl}",
+                        "icon_url": "https://www.duplicati.com/images/duplicati-fb-share-v1.png"
+                    }
+                    }
+                ]
+                }
+            webhookresult = requests.post(webhookurl,json = jsondata)
+            #print(webhookresult)
+
             if DATABASE == 'True' and PROJECTID:
                 output['when'] = datetime.datetime.utcnow()
                 print('trying to insert')
