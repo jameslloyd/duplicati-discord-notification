@@ -62,12 +62,12 @@
         var DeletedFilesconfig = {
           type:    'line',
           data:    { datasets: [ { backgroundColor: '#8b1ff0',borderColor: '#8b1ff0',label: "Deleted Files",fill: false, data: [{% for w in when %}{x: Date.parse("{{w}}"), y: {{deletedfiles[loop.index -1]}}},  {% endfor %}]} ]},
-          options: { responsive: true, title: { display: true, text: "Size" }, scales: { xAxes: [{type: "time", time: {unit: 'day', tooltipFormat: 'll' }, scaleLabel: { display: true, labelString: 'Date'}}], yAxes: [{scaleLabel: { display: true, labelString: 'GB\'s' }}]} }
+          options: { responsive: true, title: { display: true, text: "Files" }, scales: { xAxes: [{type: "time", time: {unit: 'day', tooltipFormat: 'll' }, scaleLabel: { display: true, labelString: 'Date'}}], yAxes: [{scaleLabel: { display: true, labelString: 'No. Files' }}]} }
       };
       var ModifiedFilesconfig = {
         type:    'line',
         data:    { datasets: [ { backgroundColor: '#1ff08b',borderColor: '#1ff08b',label: "Modified Files",fill: false, data: [{% for w in when %}{x: Date.parse("{{w}}"), y: {{modifiedfiles[loop.index -1]}}},  {% endfor %}]} ]},
-        options: { responsive: true, title: { display: true, text: "Size" }, scales: { xAxes: [{type: "time", time: {unit: 'day', tooltipFormat: 'll' }, scaleLabel: { display: true, labelString: 'Date'}}], yAxes: [{scaleLabel: { display: true, labelString: 'GB\'s' }}]} }
+        options: { responsive: true, title: { display: true, text: "Files" }, scales: { xAxes: [{type: "time", time: {unit: 'day', tooltipFormat: 'll' }, scaleLabel: { display: true, labelString: 'Date'}}], yAxes: [{scaleLabel: { display: true, labelString: 'No. Files' }}]} }
     };     
         var Sizeconfig = {
             type:    'line',

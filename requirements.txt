@@ -4,3 +4,4 @@ requests
 gunicorn
 google-cloud-secret-manager
 pymongo[srv]
+matplotlib
