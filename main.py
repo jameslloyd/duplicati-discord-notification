@@ -101,12 +101,12 @@ def report():
                 duration = f"{duration} {seconds} Secs "        
 
             # duplicati version check
-            latest_duplicati_versions = get_json(get_url(versionurl))
-            latest_version = latest_duplicati_versions['version']
-            current_version = output['Version'].split(' ')
-            current_version = current_version[0]
-            if current_version != latest_version:
-                erroroutput = f"{erroroutput} \n :warning: Duplicati isn't running on the latest version :warning:"
+            #latest_duplicati_versions = get_json(get_url(versionurl))
+            #latest_version = latest_duplicati_versions['version']
+            #current_version = output['Version'].split(' ')
+            #current_version = current_version[0]
+            #if current_version != latest_version:
+            #    erroroutput = f"{erroroutput} \n :warning: Duplicati isn't running on the latest version :warning:"
 
             #webhook = DiscordWebhook(url=webhookurl, username=f'{output["MainOperation"]} Notification')
             size = sizeof_fmt(output["SizeOfExaminedFiles"])
