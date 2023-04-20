@@ -42,13 +42,21 @@
                     <span style='width:200px;' class="input-group-text">Webhook: </span> 
                     <input type="text" class="form-control" placeholder="Some Discord Webhook" aria-label="webhook" name='webhook' pattern="(https:\/\/discord.com\/api\/webhooks\/).*" title="Needs to be a discord webhook url" required>
                 </div>
+                <div class="input-group mb-3">
+                  <span style='width:200px;' class="input-group-text">Level: </span> 
+                  <select name='level' class="form-control">
+                    <option>Success</option>
+                    <option>Warning</option>
+                    <option>Error</option>
+                  </select>
+              </div>
                 <div class="input-group mb-3">        
                     <button type="submit" class="btn btn-primary">Create send-http-url URL</button>
                 </div>
                 {%if (request.args.get('name')) and (request.args.get('webhook')) %}
                 <div class="input-group mb-3">        
                     <span style='width:150px;' class="input-group-text" id="basic-addon1">send-http-url</span> 
-                    <input type="text" class="form-control" value='{{ request.base_url }}report?name={{request.args.get('name')}}&webhook={{request.args.get('webhook')}}' disabled>
+                    <input type="text" class="form-control" value='{{ request.base_url }}report?name={{request.args.get('name')}}&webhook={{request.args.get('webhook')}}&level={{request.args.get('level')}}' disabled>
                 </div>
                 {%endif-%}
             </form>

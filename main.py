@@ -70,9 +70,9 @@ def report():
         webhookurl = request.args.get('webhook', '')
         message = request.form.get('message','')
         if request.args.get('level'):
-            if request.args.get('level') == 'w':
+            if request.args.get('level') == 'Warning':
                 notification_level = ['Unknown','Warning','Error','FATAL']
-            elif request.args.get('level') == 'e':
+            elif request.args.get('level') == 'Error':
                 notification_level = ['Unknown','Error','FATAL']
             else:
                 notification_level = ['Success','Unknown','Warning','Error','FATAL']
