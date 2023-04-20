@@ -34,7 +34,7 @@ icon = {}
 icon['Success'] = ':white_check_mark:'
 icon['Warning'] = ':warning:'
 icon['Error'] = ':no_entry:'
-icon['Uknown'] = ':grey_question:'
+icon['Unknown'] = ':grey_question:'
 icon['FATAL'] = ':fire:'
 
 dataitems = ['DeletedFiles','DeletedFolders','ModifiedFiles','ExaminedFiles','OpenedFiles','AddedFiles','SizeOfModifiedFiles','SizeOfAddedFiles','SizeOfExaminedFiles','SizeOfOpenedFiles','NotProcessedFiles','AddedFolders','TooLargeFiles','FilesWithError','ModifiedFolders','ModifiedSymlinks','AddedSymlinks','DeletedSymlinks','PartialBackup','Dryrun','MainOperation','ParsedResult','Version','EndTime','BeginTime','Duration','MessagesActualLength','WarningsActualLength','ErrorsActualLength']
@@ -69,6 +69,16 @@ def report():
     if request.args.get('webhook'):
         webhookurl = request.args.get('webhook', '')
         message = request.form.get('message','')
+        if request.args.get('level'):
+            if request.args.get('level') == 'w':
+                notification_level = ['Unknown','Warning','Error','FATAL']
+            elif request.args.get('level') == 'e':
+                notification_level = ['Unknown','Error','FATAL']
+            else:
+                notification_level = ['Success','Unknown','Warning','Error','FATAL']
+        else:
+            notification_level = ['Success','Unknown','Warning','Error','FATAL']
+            
         if request.args.get('name'):
             name = request.args.get('name').replace(" ", "_")
             data = message.split('\n')
@@ -193,7 +203,8 @@ def report():
                     }
                 ]
                 }
-            webhookresult = requests.post(webhookurl,json = jsondata)
+            if output["ParsedResult"] in notification_level:
+                webhookresult = requests.post(webhookurl,json = jsondata)
             #print(webhookresult)
 
             if DATABASE == 'True' and PROJECTID:
@@ -247,4 +258,4 @@ def chart():
     return render_template('chart.html', when=when,addedfiles=addedfiles,modifiedfiles=modifiedfiles,deletedfiles=deletedfiles,size=size,timetaken=timetaken,backups=backups,height=height)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0")
+    app.run(host="0.0.0.0", port=8888)
