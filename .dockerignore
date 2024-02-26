@@ -1,6 +1,0 @@
-app.yaml
-cloudbuild.yaml
-.gcloudignore
-.venv
-.git
-__pycache__

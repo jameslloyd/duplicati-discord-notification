@@ -1,4 +1,4 @@
-flask
-discord-webhook
+hyperdiv
 requests
-gunicorn
+Authlib
+python-dotenv

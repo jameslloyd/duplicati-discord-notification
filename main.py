@@ -1,91 +1,159 @@
-from flask import Flask, request, render_template
+import hyperdiv as hd
+from Google_Oauth2 import login_url, auth_reponse
 import requests
-from discord_webhook import DiscordWebhook, DiscordEmbed
+from dotenv import load_dotenv
 
-colour = {}
-colour['Success'] = '7CFC00'
-colour['Unknown'] = '909090'
-colour['Warning'] = 'FFBF00'
-colour['Error'] = 'FF0000'
-colour['FATAL'] = 'FF0000'
-icon = {}
-icon['Success'] = ':white_check_mark:'
-icon['Warning'] = ':warning:'
-icon['Error'] = ':no_entry:'
-icon['Uknown'] = ':grey_question:'
-icon['FATAL'] = ':fire:'
+load_dotenv()
+router = hd.router()
 
-dataitems = ['DeletedFiles','DeletedFolders','ModifiedFiles','ExaminedFiles','OpenedFiles','AddedFiles','SizeOfModifiedFiles','SizeOfAddedFiles','SizeOfExaminedFiles','SizeOfOpenedFiles','NotProcessedFiles','AddedFolders','TooLargeFiles','FilesWithError','ModifiedFolders','ModifiedSymlinks','AddedSymlinks','DeletedSymlinks','PartialBackup','Dryrun','MainOperation','ParsedResult','Version','EndTime','BeginTime','Duration','MessagesActualLength','WarningsActualLength','ErrorsActualLength']
-app = Flask(__name__)
 
-def sizeof_fmt(num, suffix="B"):
-    num = int(num)
-    for unit in ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]:
-        if abs(num) < 1024.0:
-            return f"{num:3.1f}{unit}{suffix}"
-        num /= 1024.0
-    return f"{num:.1f}Yi{suffix}"
 
-@app.route("/")
+class Backupjobs:
+    """
+    The backupjobs state. Note that we could inherit from hd.BaseState here
+    and define a `backupjobs` prop, but instead we choose to use a private
+    state variable created with hd.state.
+    """
+
+    def __init__(self):
+        self.state = hd.state(
+            backupjobs={
+                "Meet Joe for lunch": False,
+                "Fix bycicle": True,
+                "Buy groceries": False,
+            }
+        )
+
+    @property
+    def backupjob_list(self):
+        return self.state.backupjobs.items()
+
+    def add_backupjob(self, backupjob):
+        if backupjob not in self.state.backupjobs:
+            # Note that the `|` operator is important because it
+            # creates a new dictionary object.
+            # `self.state.backupjobs[backupjob] = False` would not work.
+            # Also note that the `|=` operator would not work, since
+            # it mutates the left-hand side value in place.
+            # We could also do:
+            #    new_dict = dict(**self.state.backupjobs)
+            #    new_dict[backupjob] = False
+            #    self.state.backupjobs = new_dict
+            self.state.backupjobs = {backupjob: False} | self.state.backupjobs
+
+    def backupjob_is_done(self, backupjob):
+        return self.state.backupjobs[backupjob]
+
+    def toggle_backupjob(self, backupjob):
+        self.state.backupjobs = self.state.backupjobs | {backupjob: not self.state.backupjobs[backupjob]}
+
+@router.route("/")
 def home():
-    return render_template('index.html')
+    hd.markdown("# Welcome")
 
-@app.route("/report", methods=['POST'])
-def report():
-    if request.args.get('webhook'):
-        webhookurl = request.args.get('webhook')
-        message = request.form.get('message')
-        if request.args.get('name'):
-            name = request.args.get('name')
-            data = message.split('\n')
-            output = {}
-            errors = []
-            for item in data:
-                if item.startswith(tuple(dataitems)):
-                    if ':' in item:
-                        i = item.split(': ')
-                        output[i[0]]=i[1]
-                else:
-                    if 'Access to the path' in item:
-                        error = item.split('Access to the path ')
-                        errors.append(error[1])
-            errors = list(dict.fromkeys(errors))
-            erroroutput = ''
-            for e in errors[:2]:
-                erroroutput = f'{erroroutput}\n Access to path {e}'
-            output['Duration'] = output['Duration'].split(':')
-            duration = ''
-            if output['Duration'][0] != '00':
-                duration = f"{duration} {output['Duration'][0]} Hrs "
-            if output['Duration'][1] != '00':
-                duration = f"{duration} {output['Duration'][1]} Mins "
-            if output['Duration'][2] != '00':
-                seconds = int(round(float(output['Duration'][2]),1))
-                duration = f"{duration} {seconds} Secs "                
-            webhook = DiscordWebhook(url=webhookurl, username=f'{output["MainOperation"]} Notification')
-            size = sizeof_fmt(output["SizeOfExaminedFiles"])
-            title = f'{icon[output["ParsedResult"]]} Duplicati job {name} {output["MainOperation"]} {output["ParsedResult"]} {icon[output["ParsedResult"]]}'
-            footer = f'{output["MainOperation"]} {output["ParsedResult"]}'
-            embed = DiscordEmbed(title=title,color=colour[output["ParsedResult"]], description=erroroutput)
-            output["BeginTime"] = output["BeginTime"].split('(')
-            embed.set_author(name="Duplicati Discord Notification",url="https://duplicati-notifications.lloyd.ws/")
-            embed.add_embed_field(name='Started', 
-                                    value=output["BeginTime"][0]) # 2/7/2022 7:25:05 AM (1644218705)  %-m/%-d/%Y %H:%-M:%S ()
-            embed.add_embed_field(name='Time Taken', value=duration) #00:00:00.2887780
-            embed.add_embed_field(name='No. Files', value='{:,}'.format(int(output["ExaminedFiles"])))
-            embed.add_embed_field(name='Added Files', value='{:,}'.format(int(output["AddedFiles"])))
-            embed.add_embed_field(name='Added Size', value=sizeof_fmt(int(output["SizeOfAddedFiles"]))) # f'{1000000:,}'
-            embed.add_embed_field(name='Deleted Files', value='{:,}'.format(int(output["DeletedFiles"])))
-            embed.add_embed_field(name='Modified Files', value='{:,}'.format(int(output["ModifiedFiles"])))
-            embed.add_embed_field(name='Modified Size', value=sizeof_fmt(int(output["SizeOfModifiedFiles"])))
-            embed.add_embed_field(name='Size', value=size)
-            embed.set_footer(text=footer)
-            webhook.add_embed(embed)
-            webhook.execute()
-        if request.args.get('duplicatimonitor'):
-            postdata = {'message': message}
-            requests.post(request.args.get('duplicatimonitor'), data = postdata)
-    return '{}'
+@router.route("/login")
+def login():
+    loc = hd.location()
+    url = loc.protocol + "://" + loc.host + loc.path + "?" + loc.query_args
+    auth = auth_reponse(url)
+    if auth:
+        print(auth)
+        hd.local_storage.set_item("user_id", auth['id'])
+        hd.local_storage.set_item("email", auth['email'])
+        hd.local_storage.set_item("name", auth['name'])
+        hd.local_storage.set_item("picture", auth['picture'])
+        hd.local_storage.set_item("logged_in", "True")
+        hd.markdown(auth)
+        hd.avatar(image=auth['picture'])
+   
+@router.route("/logout")
+def logout():
+    hd.local_storage.remove_item("user_id")
+    hd.local_storage.remove_item("email")
+    hd.local_storage.remove_item("name")
+    hd.local_storage.remove_item("picture")
+    hd.local_storage.remove_item("logged_in")
+    loc = hd.location()
+    
+    loc.go(path="/")
+ 
+    
+@router.route("/backups")
+def backups():
+    hd.markdown("# Backups")
+    backupjobs = Backupjobs()
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0")
+    # Outer container that centers the title and inner container.
+    with hd.box(gap=2, padding=4, align="center"):
+        # Title
+        hd.markdown("# Simple Todo App")
+        # Inner container with the core functionality in it
+        with hd.box(gap=2, width=40):
+            # Input form
+            with hd.form() as form:
+                form.text_input(placeholder="Enter a backupjob", name="backupjob")
+            if form.submitted:
+                backupjob = form.form_data["backupjob"]
+                if backupjob:
+                    backupjobs.add_backupjob(backupjob)
+                form.reset()
+
+            # Bullet-list of backupjobs
+            with hd.table():
+                for backupjob, done in backupjobs.backupjob_list:
+                    with hd.scope(backupjob):
+                        with hd.tr():
+                            hd.td()
+                            with hd.link(
+                                href="", font_color="neutral-800"
+                            ) as backupjob_link:
+                                if backupjobs.backupjob_is_done(backupjob):
+                                    hd.markdown(f"~~{backupjob}~~")
+                                else:
+                                    hd.markdown(backupjob)
+                            if backupjob_link.clicked:
+                                backupjobs.toggle_backupjob(backupjob)
+
+def main():
+    loginurl = login_url()
+    template = hd.template(logo="/assets/duplicati.png", title="Duplicati Notifications")
+    indexpage = hd.index_page(
+        title="Duplicati Notifications"
+    )
+    # Sidebar menu linking to the app's pages:
+    template.add_sidebar_menu(
+        {
+            "Home": {"icon": "house", "href": home.path},
+            "Backups": {"icon": "layer-backward", "href": "/backups"},
+        }
+    )
+    with template.sidebar:
+        hd.text(
+            '''
+            Custom sidebar content,
+            Rendered, below the menu.
+            '''
+        )
+    # A topbar contact link:
+    logged_in = hd.local_storage.has_item("user_id")
+    
+    print(logged_in)
+    if hd.local_storage.has_item("user_id"):
+        template.add_topbar_links(
+            {
+                "Logout": {"icon": "person-square", "href": "/logout"}
+            }
+        )
+    else:    
+        template.add_topbar_links(
+            {
+                "Login": {"icon": "person-square", "href": loginurl}
+            }
+        )
+
+
+    # Render the active page in the body:
+    with template.body:
+        router.run()
+
+hd.run(main)
